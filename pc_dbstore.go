@@ -63,7 +63,7 @@ func init() {
 	if err != nil {
 		print("connection error: ")
 		print(err)
-		print("\n")
+		log.Fatal("\n")
 	}
 
 	// ping
@@ -71,7 +71,7 @@ func init() {
 	if err != nil {
 		print("ping error: ")
 		print(err)
-		print("\n")
+		log.Fatal("\n")
 	}
 
 	// create table
@@ -79,9 +79,9 @@ func init() {
 	// select hex(mac) from log;
 	// insert into pc (mac) values (x'000CF15698AD');
 	if err != nil {
-		print("exec error: ")
+		print("create table error: ")
 		print(err)
-		print("\n")
+		log.Fatal("\n")
 	}
 }
 
