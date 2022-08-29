@@ -106,9 +106,9 @@ func dbStore(ts time.Time, mac string, hostname string, sid uint32, dir string, 
 
 	hexmac := strings.Replace(mac, ":", "", -1)
 	nummac, err := strconv.ParseUint(hexmac, 16, 64)
-    if err != nil {
-        panic(err)
-    }
+	if err != nil {
+		panic(err)
+	}
 
 	log.Printf("Storeing %v, %s, %s, %d, %s, %d", ts.Format(layout_db), hexmac, hostname, sid, dir, height)
 	result, err := db.Exec(`insert into pc(time, mac, hostname, sid, dir, height) values(?, ?, ?, ?, ?, ?)`, ts.Format(layout_db), nummac, hostname, sid, dir, height)
@@ -140,6 +140,7 @@ func supplyPCountCallback(clt *sxutil.SXServiceClient, sp *api.Supply) {
 			for _, v := range pc.Data {
 				if v.Typ == "counter" && v.Id == "1" {
 					ts, _ := time.Parse(layout, ptypes.TimestampString(v.Ts))
+					sid += 1000 // Offset for centrair, pc sensors
 					dbStore(ts, pc.Mac, pc.Hostname, uint32(sid), v.Dir, v.Height)
 				}
 			}
