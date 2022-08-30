@@ -62,7 +62,7 @@ func init() {
 	db, err = sql.Open("mysql", addr)
 	if err != nil {
 		print("connection error: ")
-		print(err)
+		log.Println(err)
 		log.Fatal("\n")
 	}
 
@@ -70,7 +70,7 @@ func init() {
 	err = db.Ping()
 	if err != nil {
 		print("ping error: ")
-		print(err)
+		log.Println(err)
 		log.Fatal("\n")
 	}
 
@@ -80,7 +80,7 @@ func init() {
 	// insert into pc (mac) values (x'000CF15698AD');
 	if err != nil {
 		print("create table error: ")
-		print(err)
+		log.Println(err)
 		log.Fatal("\n")
 	}
 }
@@ -91,7 +91,7 @@ func dbStore(ts time.Time, mac string, hostname string, sid uint32, dir string, 
 	err := db.Ping()
 	if err != nil {
 		print("ping error: ")
-		print(err)
+		log.Println(err)
 		print("\n")
 		// connect
 		addr := fmt.Sprintf("%s:%s@(%s:3306)/%s", db_user, db_pswd, db_host, db_name)
@@ -99,7 +99,7 @@ func dbStore(ts time.Time, mac string, hostname string, sid uint32, dir string, 
 		db, err = sql.Open("mysql", addr)
 		if err != nil {
 			print("connection error: ")
-			print(err)
+			log.Println(err)
 			print("\n")
 		}
 	}
@@ -115,12 +115,12 @@ func dbStore(ts time.Time, mac string, hostname string, sid uint32, dir string, 
 
 	if err != nil {
 		print("exec error: ")
-		print(err)
+		log.Println(err)
 		print("\n")
 	} else {
 		rowsAffected, err := result.RowsAffected()
 		if err != nil {
-			print(err)
+			log.Println(err)
 		} else {
 			print(rowsAffected)
 		}
@@ -137,10 +137,10 @@ func supplyPCountCallback(clt *sxutil.SXServiceClient, sp *api.Supply) {
 		if err == nil {
 			sliceHostname := strings.Split(pc.Hostname, "-vc3d-")
 			sid, _ := strconv.Atoi(sliceHostname[0])
+			sid += 1000 // Offset for centrair, pc sensors
 			for _, v := range pc.Data {
 				if v.Typ == "counter" && v.Id == "1" {
 					ts, _ := time.Parse(layout, ptypes.TimestampString(v.Ts))
-					sid += 1000 // Offset for centrair, pc sensors
 					dbStore(ts, pc.Mac, pc.Hostname, uint32(sid), v.Dir, v.Height)
 				}
 			}
