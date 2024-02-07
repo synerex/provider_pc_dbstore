@@ -77,7 +77,7 @@ func init() {
 	}
 
 	// create table
-	_, err = db.Exec(ctx, `create table if not exists pc(id BIGSERIAL NOT NULL, time TIMESTAMP not null, mac BIGINT not null, hostname VARCHAR(24) not null, sid INT not null, dir CHAR(2) not null, height INT not null, primary key(id))`)
+	_, err = db.Exec(ctx, `create table if not exists pc(id BIGSERIAL NOT NULL, time TIMESTAMP not null, mac BIGINT not null, hostname VARCHAR(24) not null, sid INT not null, dir CHAR(2) not null, height INT not null, primary key(id), constraint pc_pk unique (time, sid, dir, height))`)
 	// select hex(mac) from log;
 	// insert into pc (mac) values (x'000CF15698AD');
 	if err != nil {
