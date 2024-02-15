@@ -77,13 +77,57 @@ func init() {
 	}
 
 	// create table
-	_, err = db.Exec(ctx, `create table if not exists pc(id BIGSERIAL NOT NULL, time TIMESTAMP not null, mac BIGINT not null, hostname VARCHAR(24) not null, sid INT not null, dir CHAR(2) not null, height INT not null, primary key(id), constraint pc_pk unique (time, sid, dir, height))`)
+	_, err = db.Exec(ctx, `create table if not exists pc(id BIGSERIAL NOT NULL, time TIMESTAMP not null, mac BIGINT not null, hostname VARCHAR(24) not null, sid INT not null, dir CHAR(2) not null, height INT not null, constraint pc_pk unique (time, sid, dir, height))`)
 	// select hex(mac) from log;
 	// insert into pc (mac) values (x'000CF15698AD');
 	if err != nil {
 		print("create table error: ")
 		log.Println(err)
 		log.Fatal("\n")
+	}
+
+	_, err = db.Exec(ctx, `SELECT create_hypertable('pc', 'time', migrate_data => true, if_not_exists => true, chunk_time_interval => INTERVAL '1 week')`)
+	if err != nil {
+		print("create_hypertable error: ")
+		log.Println(err)
+		log.Fatal("\n")
+	}
+
+	_, err = db.Exec(ctx, `SELECT attach_tablespace('fast_space', 'pc', if_not_attached => true)`)
+	if err != nil {
+		print("attach_tablespace error: ")
+		log.Println(err)
+		log.Fatal("\n")
+	}
+
+	_, err = db.Exec(ctx, `CLUSTER pc USING pc_time_idx`)
+	if err != nil {
+		print("CLUSTER error: ")
+		log.Println(err)
+		log.Fatal("\n")
+	}
+
+	_, err = db.Exec(ctx, `ALTER TABLE pc SET (timescaledb.compress, timescaledb.compress_segmentby = 'sid', timescaledb.compress_orderby = 'time, dir, height DESC')`)
+	if err != nil {
+		print("ALTER TABLE pc SET error: ")
+		log.Println(err)
+		log.Fatal("\n")
+	}
+
+	var count int
+	if err := db.QueryRow(ctx, `select count(*) from timescaledb_information.jobs where proc_name like 'move_old_chunks' and config?'hypertable' and config->>'hypertable' like 'pc'`).Scan(&count); err != nil {
+		print("select count(*) from timescaledb_information.jobs query error: ")
+		log.Println(err)
+		print("\n")
+	} else {
+		if count == 0 {
+			_, err = db.Exec(ctx, `SELECT add_job('move_old_chunks', '1 week', config => '{"hypertable":"pc","lag":"1 year","tablespace":"slow_space"}')`)
+			if err != nil {
+				print("SELECT add_job: ")
+				log.Println(err)
+				log.Fatal("\n")
+			}
+		}
 	}
 }
 
