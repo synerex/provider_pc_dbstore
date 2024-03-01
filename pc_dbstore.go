@@ -114,21 +114,21 @@ func init() {
 		log.Fatal("\n")
 	}
 
-	var count int
-	if err := db.QueryRow(ctx, `select count(*) from timescaledb_information.jobs where proc_name like 'move_old_chunks' and config?'hypertable' and config->>'hypertable' like 'pc'`).Scan(&count); err != nil {
-		print("select count(*) from timescaledb_information.jobs query error: ")
-		log.Println(err)
-		print("\n")
-	} else {
-		if count == 0 {
-			_, err = db.Exec(ctx, `SELECT add_job('move_old_chunks', '1 week', config => '{"hypertable":"pc","lag":"1 year","tablespace":"slow_space"}')`)
-			if err != nil {
-				print("SELECT add_job: ")
-				log.Println(err)
-				log.Fatal("\n")
-			}
-		}
-	}
+	// var count int
+	// if err := db.QueryRow(ctx, `select count(*) from timescaledb_information.jobs where proc_name like 'move_old_chunks' and config?'hypertable' and config->>'hypertable' like 'pc'`).Scan(&count); err != nil {
+	// 	print("select count(*) from timescaledb_information.jobs query error: ")
+	// 	log.Println(err)
+	// 	print("\n")
+	// } else {
+	// 	if count == 0 {
+	// 		_, err = db.Exec(ctx, `SELECT add_job('move_old_chunks', '1 week', config => '{"hypertable":"pc","lag":"1 year","tablespace":"slow_space"}')`)
+	// 		if err != nil {
+	// 			print("SELECT add_job: ")
+	// 			log.Println(err)
+	// 			log.Fatal("\n")
+	// 		}
+	// 	}
+	// }
 }
 
 func dbStore(ts time.Time, mac string, hostname string, sid uint32, dir string, height uint32) {
